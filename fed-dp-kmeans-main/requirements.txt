@@ -1,0 +1,12 @@
+dp_accounting
+folktables
+h5py
+numpy
+pandas
+pfl==0.1.0
+tensorflow==2.15.0
+torch==2.4.0
+scikit-learn
+scipy
+sentence_transformers
+tqdm
