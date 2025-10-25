@@ -199,6 +199,8 @@ def main():
             model_eval_params=model_params
         )
 
+        initial_centers = init_model.centers
+
     else:
         raise ValueError("Initialization algorithm not recognized.")
 
