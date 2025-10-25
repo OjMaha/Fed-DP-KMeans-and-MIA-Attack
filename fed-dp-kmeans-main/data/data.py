@@ -17,6 +17,8 @@ def make_data(args: argparse.Namespace):
     set_seed(args.data_seed)
     dataset = args.dataset
 
+    target_client_to_exclude = args.exclude_client_id_str
+
     if dataset == 'GaussianMixtureUniform':
         K, d = args.K, args.dim
         means = make_uniform_gaussian_means(K, d)
@@ -32,6 +34,11 @@ def make_data(args: argparse.Namespace):
             client_datasets = []
             all_x, all_y = [], []
             for i in range(num_clients):
+
+                if str(i) == target_client_to_exclude:
+                    print(f"--- MIA ATTACK: Excluding client {i} ---")
+                    continue # Skip this client
+
                 n = num_samples_fn()
                 x, y = generate_gaussian_mixture_data(n, mixture_weights, means, covs)
                 client_datasets.append(Dataset((x, y), user_id=str(i)))
@@ -42,10 +49,18 @@ def make_data(args: argparse.Namespace):
             all_y = np.hstack(all_y)
             central_data.append(Dataset((all_x, all_y)))
 
-            def make_dataset_fn(user_id, datasets=client_datasets):
+            # def make_dataset_fn(user_id, datasets=client_datasets):
+            #     return datasets[user_id]
+
+            # user_sampler = get_user_sampler('minimize_reuse', list(range(num_clients)))
+            user_id_list = [d.user_id for d in client_datasets] # Get filtered list of user IDs
+            user_id_to_dataset = {d.user_id: d for d in client_datasets}
+
+            def make_dataset_fn(user_id, datasets=user_id_to_dataset):
                 return datasets[user_id]
 
-            user_sampler = get_user_sampler('minimize_reuse', list(range(num_clients)))
+            user_sampler = get_user_sampler('minimize_reuse', user_id_list)
+            
             all_clients.append(FederatedDataset(make_dataset_fn, user_sampler))
 
         samples_per_mixture = args.samples_per_mixture_server * np.ones(K, dtype=int)

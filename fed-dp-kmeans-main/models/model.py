@@ -146,6 +146,11 @@ class FedClusterInitModel(EvaluatableModel):
         if 'sum_points_per_component' in self.accumulated_statistics.keys():
             point_sums = self.accumulated_statistics['sum_points_per_component']
             point_counts = self.accumulated_statistics['num_points_per_component']
+
+            # --- ADD THIS SAFETY CHECK ---
+            mask = point_counts == 0
+            point_counts[mask] = 1 # Prevent division by zero
+            
             self.initial_centers = point_sums / point_counts.reshape(-1, 1)
         else:
             # The "mean of means" case for client-level DP.

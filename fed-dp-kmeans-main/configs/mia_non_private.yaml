@@ -1,0 +1,13 @@
+K: 10
+center_init_privacy: false
+datapoint_privacy: false
+dataset: GaussianMixtureUniform
+dim: 100
+fedlloyds_num_iterations: 1
+fedlloyds_privacy: false
+num_train_clients: 100
+num_uniform_server: 100
+outer_product_privacy: false
+point_weighting_privacy: false
+samples_per_client: 1000
+samples_per_mixture_server: 20

@@ -112,9 +112,26 @@ def get_mechanism(args: argparse.Namespace, mechanism_name):
             mechanism = CentrallyAppliedPrivacyMechanism(MultipleMechanisms(
                 [sum_points_privacy, num_points_privacy],
                 [('sum_points_per_component',), ('num_points_per_component',)]))
-        else: # The "mean of means" case.
-            # ... (similar logic as above but for means and contribution flags)
-            ...
+            
+        else:
+            sampling_probability = args.fedlloyds_cohort_size / args.num_train_clients
+            fedlloyds_accountant = PLDPrivacyAccountant(
+                num_compositions=args.fedlloyds_num_iterations,
+                sampling_probability=sampling_probability,
+                mechanism='gaussian',
+                epsilon=args.fedlloyds_epsilon,
+                delta=args.fedlloyds_delta)
+
+            mechanism_cls = DataPrivacyGaussianMechanism if args.datapoint_privacy else GaussianMechanism
+            fedlloyds_gaussian_noise_mechanism = mechanism_cls.from_privacy_accountant(
+                accountant=fedlloyds_accountant, clipping_bound=args.fedlloyds_clipping_bound)
+
+            components_mechanism_cls = DataPrivacyLaplaceMechanism if args.datapoint_privacy else LaplaceMechanism
+            contributed_components_privacy = components_mechanism_cls(args.fedlloyds_contributed_components_clipping_bound, args.fedlloyds_contributed_components_epsilon)
+
+            mechanism = CentrallyAppliedPrivacyMechanism(MultipleMechanisms(
+                [fedlloyds_gaussian_noise_mechanism, contributed_components_privacy],
+                [('mean_points_per_component',), ('contributed_components',)]))
 
     elif mechanism_name == 'no_privacy':
         mechanism = CentrallyAppliedPrivacyMechanism(NoPrivacy())
@@ -166,8 +183,14 @@ def compute_privacy_accounting(mechanisms: List[PrivacyMechanism], target_delta:
                 sampling_prob=p
             )
         elif type(mechanism).__name__ in ['LaplaceMechanism', 'DataPrivacyLaplaceMechanism']:
-            # ... (similar logic for Laplace)
-            ...
+            noise_scale = get_param_value(mechanism._clipping_bound) / mechanism._epsilon
+            dp_accounting_mechanism = privacy_loss_distribution.from_laplace_mechanism(
+                noise_scale,
+                sensitivity=get_param_value(mechanism._clipping_bound),
+                value_discretization_interval=1e-3,
+                sampling_prob=p
+            )
+    
         elif type(mechanism).__name__ == 'NoPrivacy':
             return np.inf
         else:

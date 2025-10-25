@@ -274,6 +274,16 @@ def main():
     with open(os.path.join(results_path, 'summary_results.pkl'), 'wb') as f:
         pickle.dump(results_dict, f)
 
-
+    final_centers = None
+    if 'clustering_model' in locals():
+        final_centers = clustering_model.centers
+    elif 'init_model' in locals() and init_model.initial_centers is not None:
+        # This handles the case where clustering_algorithm is 'None'
+        final_centers = init_model.initial_centers
+    
+    if final_centers is not None:
+        # Save the centers to a predictable location
+        np.save('final_centers.npy', final_centers)
+        
 if __name__ == '__main__':
     main()
