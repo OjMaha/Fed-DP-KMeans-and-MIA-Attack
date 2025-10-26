@@ -30,6 +30,10 @@ def main():
     parser = add_algorithms_arguments(parser)
     parser = add_data_arguments(parser)
     parser = add_utils_arguments(parser)
+    ## Added for data-level attack ##########
+    parser.add_argument('--exclude_datapoint', type=str, default=None,
+                help='Exclude a specific datapoint in format client_id:sample_index (e.g., "3:17")')
+    #########################################
     args = parser.parse_args()
 
     set_data_args(args)
@@ -37,6 +41,49 @@ def main():
 
     train_clients, val_clients, server_dataset, central_data = make_data(args)  # data seed is set here
     set_seed(args.seed)  # training seed is set here
+
+    ## Added for data-level attack ##########
+    if args.exclude_datapoint is not None:
+        client_id_str, sample_idx_str = args.exclude_datapoint.split(':')
+        sample_idx = int(sample_idx_str)
+        # keep original factory
+        if hasattr(train_clients, 'make_dataset_fn'):
+            orig_make_fn = train_clients.make_dataset_fn
+
+            class PatchedUserDataset:
+                def __init__(self, X, y=None, user_id=None):
+                    self.user_id = user_id
+                    if y is not None:
+                        self.raw_data = (X, y)
+                    else:
+                        self.raw_data = (X,)
+
+                def __len__(self):
+                    # Number of samples = number of rows in X
+                    return self.raw_data[0].shape[0]
+
+            # patched make_fn
+            def patched_make_fn(user_id):
+                user_dataset = orig_make_fn(user_id)  # get original
+
+                if str(user_id) == str(client_id_str):
+                    X = user_dataset.raw_data[0]
+                    X_new = np.delete(X, sample_idx, axis=0)
+
+                    if len(user_dataset.raw_data) > 1:
+                        y = user_dataset.raw_data[1]
+                        y_new = np.delete(y, sample_idx, axis=0)
+                        return PatchedUserDataset(X_new, y_new, user_id=user_id)
+                    else:
+                        return PatchedUserDataset(X_new, user_id=user_id)
+
+                return user_dataset
+
+            # replace the factory function
+            train_clients.make_dataset_fn = patched_make_fn
+        else:
+            print("Warning: train_clients has no make_dataset_fn attribute; exclude_datapoint may not work.")
+            #########################################
 
     privacy_type = 'data_point_level' if args.datapoint_privacy else 'client_level'
     results_path = make_results_path(privacy_type, args.dataset)
