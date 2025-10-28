@@ -148,9 +148,7 @@ def main():
     
     print("\n--- 2. Loading client list ---")
     
-    # Hack to get args parsed from config file to load the data
-    # This setup is a bit fragile and relies on the user's file structure.
-    # We need to load the *full* dataset once to know all client IDs.
+    # We need to load the full dataset once to know all client IDs.
     temp_parser = argparse.ArgumentParser()
     temp_parser = add_data_arguments(temp_parser)
     temp_parser = add_utils_arguments(temp_parser)
