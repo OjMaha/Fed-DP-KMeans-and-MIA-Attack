@@ -130,6 +130,14 @@ def add_fedlloyds_arguments(
     parser.add_argument("--fedlloyds_contributed_components_epsilon", type=float, default=0.2)
     parser.add_argument("--fedlloyds_contributed_components_clipping_bound", type=float, default=10)
 
+    # --- Reconstruction Attack Data Saving Arguments ---
+    parser.add_argument("--save_reconstruction_data", type=str2bool, default=False,
+                        help="If True, save intermediate data for reconstruction attack simulation.")
+    parser.add_argument("--recon_target_client_id", type=str, default=None,
+                        help="Client ID to target for saving reconstruction data.")
+    parser.add_argument("--recon_target_iteration", type=int, default=0,
+                        help="Iteration number (0-indexed) to save reconstruction data for.")
+
     return parser
 
 

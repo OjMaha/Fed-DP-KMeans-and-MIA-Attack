@@ -34,7 +34,7 @@ def create_mia_configs():
         'fedlloyds_privacy': False,  # --- NON-PRIVATE ---
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/mia_non_private.yaml', 'w') as f:
+    with open('configs/gaussian_client_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f)
 
     # Config 2: Private
@@ -65,7 +65,7 @@ def create_mia_configs():
         'minimum_server_point_weight': 5,
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/mia_private.yaml', 'w') as f:
+    with open('configs/gaussian_client_private.yaml', 'w') as f:
         yaml.dump(config_private, f)
     
     print("MIA config files created.")
@@ -78,7 +78,6 @@ def get_target_data(target_client_id_str, all_train_clients):
     user_sampler = get_user_sampler('minimize_reuse', [target_client_id_str])
     
     # Create a new FederatedDataset pointing to the same data, but with the new sampler
-    # target_dataset = FederatedDataset(all_train_clients.static_make_dataset_fn, user_sampler)
     target_dataset = FederatedDataset(all_train_clients.make_dataset_fn, user_sampler)
     
     # Sample the user
@@ -90,7 +89,7 @@ def run_training(config_file, exclude_client_id_str=None):
     """Runs run.py as a subprocess and returns the path to the saved centers."""
     
     cmd = [
-        'python', 'run.py',
+        'python', '../run.py',
         '--args_config', config_file
     ]
     
@@ -102,7 +101,7 @@ def run_training(config_file, exclude_client_id_str=None):
     # We hide the output to keep the attack log clean
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
-    # The modified run.py saves its output here
+    # run.py saves its output here
     return 'final_centers.npy'
 
 
@@ -138,7 +137,7 @@ def run_attack_once(config_file, target_client_id_str, target_client_data):
 def main():
     parser = argparse.ArgumentParser(description="Membership Inference Attack Simulation")
     parser.add_argument("--num_attacks", type=int, default=50, help="Number of attack iterations.")
-    parser.add_argument("--args_config", type=str, default="configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
+    parser.add_argument("--args_config", type=str, default="../configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
     # args = parser.parse_args()
     args, _ = parser.parse_known_args()
 
@@ -216,8 +215,8 @@ def main():
     print(f"PRIVATE Model Attack Accuracy:     {acc_private:.2f}% ({attack_results['private']['success']} / {attack_results['private']['total']})")
 
     # Clean up
-    os.remove('configs/mia_non_private.yaml')
-    os.remove('configs/mia_private.yaml')
+    os.remove('configs/gaussian_client_non_private.yaml')
+    os.remove('configs/gaussian_client_private.yaml')
     os.remove('final_centers.npy')
 
 if __name__ == "__main__":

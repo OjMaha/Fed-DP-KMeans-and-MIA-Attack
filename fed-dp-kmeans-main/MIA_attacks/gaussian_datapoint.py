@@ -36,7 +36,7 @@ def create_mia_configs():
         'fedlloyds_privacy': False,  # --- NON-PRIVATE ---
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/mia_non_private1.yaml', 'w') as f:
+    with open('configs/gaussian_datapoint_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f)
 
     # Config 2: Private
@@ -67,7 +67,7 @@ def create_mia_configs():
         'minimum_server_point_weight': 5,
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/mia_private1.yaml', 'w') as f:
+    with open('configs/gaussian_datapoint_private.yaml', 'w') as f:
         yaml.dump(config_private, f)
     
     print("MIA config files created.")
@@ -99,7 +99,7 @@ def run_training(config_file, exclude_client_id_str=None, exclude_datapoint=None
     seed: optional int to pass --seed (deterministic runs)
     output_centers: optional output path to pass to run.py if you've added that CLI (not required here)
     """
-    cmd = ['python', 'run.py', '--args_config', config_file]
+    cmd = ['python', '../run.py', '--args_config', config_file]
     if exclude_client_id_str:
         cmd.extend(['--exclude_client_id_str', exclude_client_id_str])
     if exclude_datapoint:
@@ -144,7 +144,7 @@ def run_attack_once_datalevel(config_file, target_client_id_str, sample_index, t
 def main():
     parser = argparse.ArgumentParser(description="Data-level Membership Inference Attack (white-box)")
     parser.add_argument("--num_attacks", type=int, default=50, help="Number of attack iterations.")
-    parser.add_argument("--args_config", type=str, default="configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
+    parser.add_argument("--args_config", type=str, default="../configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
     parser.add_argument("--seed", type=int, default=None, help="Optional seed to pass to runs for determinism.")
     args, _ = parser.parse_known_args()
 
@@ -213,8 +213,8 @@ def main():
 
     # Cleanup
     try:
-        os.remove('configs/mia_non_private1.yaml')
-        os.remove('configs/mia_private1.yaml')
+        os.remove('configs/gaussian_datapoint_non_private.yaml')
+        os.remove('configs/gaussian_datapoint_private.yaml')
     except Exception:
         pass
     try:

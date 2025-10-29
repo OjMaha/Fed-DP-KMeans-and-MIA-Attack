@@ -14,6 +14,8 @@ from pfl.stats import MappedVectorStatistics
 from utils import compute_num_correct, kmeans_cost
 from models import LloydsModel, LloydsModelHyperParams
 
+import os, argparse
+
 # =================================================================================================
 # Paper Connection: This file implements the `FedDP-Lloyds` algorithm, which is the
 # iterative refinement part of the overall FedDP-KMeans method. It corresponds to

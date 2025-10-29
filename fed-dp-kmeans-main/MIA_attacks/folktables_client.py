@@ -8,7 +8,6 @@ from sklearn.metrics import pairwise_distances
 import sys
 
 
-# Import necessary functions from the existing project structure
 from data import make_data, set_data_args, add_data_arguments
 from utils import kmeans_cost, add_utils_arguments
 from utils.argument_parsing import maybe_inject_arguments_from_config
@@ -56,7 +55,7 @@ def create_mia_folktables_configs(filter_label=5):
         'center_init_privacy': False,
         'fedlloyds_privacy': False,
     })
-    with open('configs/mia_folktables_non_private.yaml', 'w') as f:
+    with open('configs/folktables_client_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f, sort_keys=False)
 
     # Config 2: Private (Client Level)
@@ -89,7 +88,7 @@ def create_mia_folktables_configs(filter_label=5):
          config_private['fedlloyds_contributed_components_clipping_bound'] = 10
 
 
-    with open('configs/mia_folktables_private.yaml', 'w') as f:
+    with open('configs/folktables_client_private.yaml', 'w') as f:
         yaml.dump(config_private, f, sort_keys=False)
 
     print("MIA config files for folktables created.")
@@ -108,7 +107,7 @@ def get_target_data(target_client_id_str, all_train_clients):
 def run_training(config_file, exclude_client_id_str=None):
     """Runs run.py as a subprocess and returns the path to the saved centers."""
     cmd = [
-        'python', 'run.py',
+        'python', '../run.py',
         '--args_config', config_file
     ]
     if exclude_client_id_str:
@@ -271,8 +270,8 @@ def main():
     # Clean up generated files
     print("\nCleaning up...")
     try:
-        os.remove('configs/mia_folktables_non_private.yaml')
-        os.remove('configs/mia_folktables_private.yaml')
+        os.remove('configs/folktables_client_non_private.yaml')
+        os.remove('configs/folktables_client_private.yaml')
         # Remove final_centers.npy if it exists from a failed run
         if os.path.exists('final_centers.npy'):
             os.remove('final_centers.npy')
