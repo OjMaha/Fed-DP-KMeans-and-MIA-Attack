@@ -19,7 +19,7 @@ from privacy.utils import get_mechanism
 from algorithms import add_algorithms_arguments
 
 
-def create_recon_configs(base_config_path='../configs/gaussians_client_privacy.yaml'):
+def create_recon_configs(base_config_path='configs/gaussians_client_privacy.yaml'):
     """Creates non-private and private config files based on a template."""
     try:
         with open(base_config_path, 'r') as f:
@@ -86,6 +86,8 @@ def create_recon_configs(base_config_path='../configs/gaussians_client_privacy.y
     base_config.setdefault('fedlloyds_contributed_components_epsilon', 0.2)
     base_config.setdefault('fedlloyds_contributed_components_clipping_bound', 10)
 
+    os.makedirs("reconstruction_attacks/configs", exist_ok=True)
+
     # Config 1: Non-Private (Client Level)
     config_non_private = base_config.copy()
     config_non_private.update({
@@ -97,7 +99,7 @@ def create_recon_configs(base_config_path='../configs/gaussians_client_privacy.y
         'fedlloyds_num_iterations': 1
     })
 
-    with open('configs/gaussian_client_non_private.yaml', 'w') as f:
+    with open('reconstruction_attacks/configs/gaussian_client_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f, sort_keys=False)
 
     # Config 2: Private (Client Level - using base config parameters)
@@ -113,11 +115,11 @@ def create_recon_configs(base_config_path='../configs/gaussians_client_privacy.y
     # Ensure fedlloyds_delta exists in the private config too
     config_private.setdefault('fedlloyds_delta', config_private.get('overall_target_delta', 1e-6))
 
-    with open('configs/gaussian_client_private.yaml', 'w') as f:
+    with open('reconstruction_attacks/configs/gaussian_client_private.yaml', 'w') as f:
         yaml.dump(config_private, f, sort_keys=False)
 
     print("Reconstruction attack config files created.")
-    return 'configs/recon_gaussian_non_private.yaml', 'configs/recon_gaussian_private.yaml'
+    return 'reconstruction_attacks/configs/gaussian_client_non_private.yaml', 'reconstruction_attacks/configs/gaussian_client_private.yaml'
 
 
 def get_target_data(target_client_id_str, all_train_clients):
@@ -136,7 +138,7 @@ def run_training_get_centers(config_file, exclude_client_id_str=None, seed=None)
     Runs run.py as a subprocess. Assumes run.py saves centers to 'final_centers.npy'.
     Returns the path to the saved centers file.
     """
-    cmd = ['python', '../run.py', '--args_config', config_file]
+    cmd = ['python', 'run.py', '--args_config', config_file]
     if exclude_client_id_str:
         cmd.extend(['--exclude_client_id_str', exclude_client_id_str])
     if seed is not None:
@@ -383,7 +385,7 @@ def run_reconstruction_once(config_file, target_client_id_str, target_client_dat
 def main():
     parser = argparse.ArgumentParser(description="Mean Reconstruction Attack Simulation (Gaussian Dataset using PFL Mechanisms)")
     parser.add_argument("--num_attacks", type=int, default=20, help="Number of attack iterations (target clients).")
-    parser.add_argument("--base_config", type=str, default="../configs/gaussians_client_privacy.yaml", help="Base config file to derive attack configs and data params.")
+    parser.add_argument("--base_config", type=str, default="configs/gaussians_client_privacy.yaml", help="Base config file to derive attack configs and data params.")
     parser.add_argument("--seed", type=int, default=None, help="Global random seed for reproducibility.")
     args, unknown = parser.parse_known_args()
 

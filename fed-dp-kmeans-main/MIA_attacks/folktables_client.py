@@ -35,15 +35,15 @@ def create_mia_folktables_configs(filter_label=5):
         'num_uniform_server': 1000,
         'initialization_algorithm': 'FederatedClusterInitExact', # Use settings from folktables.yaml
         'clustering_algorithm': 'FederatedLloyds',
-        'minimum_server_point_weight': 0,
+        'minimum_server_point_weight': 5,
         'fedlloyds_num_iterations': 1, # Keep iterations low for faster attack simulation
          # Use clipping bounds from folktables.yaml
         'outer_product_clipping_bound': 2.65,
         'weighting_clipping_bound': 1,
         'center_init_clipping_bound': 2.65,
         'center_init_laplace_clipping_bound': 1,
-        'fedlloyds_clipping_bound': 2.65,
-        'fedlloyds_laplace_clipping_bound': 1,
+        'fedlloyds_clipping_bound': 12039,
+        'fedlloyds_laplace_clipping_bound': 4550,
     }
 
     # Config 1: Non-Private (Client Level)
@@ -76,8 +76,6 @@ def create_mia_folktables_configs(filter_label=5):
         'center_init_epsilon_split': 0.5, # Add if missing from base
          # Need clipping bounds specific to client-level DP if different
         'center_init_contributed_components_clipping_bound': 10, # Example value, adjust if needed
-        # fedlloyds_laplace_clipping_bound is already in base
-        # fedlloyds_clipping_bound is already in base
     })
     # Ensure all required keys for client-level DP are present (referencing gaussians_client_privacy.yaml)
     if 'center_init_contributed_components_clipping_bound' not in config_private:
@@ -107,7 +105,7 @@ def get_target_data(target_client_id_str, all_train_clients):
 def run_training(config_file, exclude_client_id_str=None):
     """Runs run.py as a subprocess and returns the path to the saved centers."""
     cmd = [
-        'python', '../run.py',
+        'python', 'run.py',
         '--args_config', config_file
     ]
     if exclude_client_id_str:
@@ -189,7 +187,7 @@ def main():
     temp_parser = add_algorithms_arguments(temp_parser)
 
     # Inject args from one of the generated config files to set dataset='folktables' etc.
-    sys.argv.extend(['--args_config', 'configs/mia_folktables_non_private.yaml'])
+    sys.argv.extend(['--args_config', 'configs/folktables_client_non_private.yaml'])
     maybe_inject_arguments_from_config()
     data_args, _ = temp_parser.parse_known_args()
     # data_args = temp_parser.parse_args() # This might fail if maybe_inject adds unexpected args
@@ -213,8 +211,8 @@ def main():
     }
 
     config_files = {
-        'non_private': 'configs/mia_folktables_non_private.yaml',
-        'private': 'configs/mia_folktables_private.yaml'
+        'non_private': 'configs/folktables_client_non_private.yaml',
+        'private': 'configs/folktables_client_private.yaml'
     }
 
     # Sample target clients without replacement since there are few

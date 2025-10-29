@@ -89,7 +89,7 @@ def run_training(config_file, exclude_client_id_str=None):
     """Runs run.py as a subprocess and returns the path to the saved centers."""
     
     cmd = [
-        'python', '../run.py',
+        'python', 'run.py',
         '--args_config', config_file
     ]
     
@@ -175,8 +175,8 @@ def main():
     }
     
     config_files = {
-        'non_private': 'configs/mia_non_private.yaml',
-        'private': 'configs/mia_private.yaml'
+        'non_private': 'configs/gaussian_client_non_private.yaml',
+        'private': 'configs/gaussian_client_private.yaml'
     }
 
     for i in range(args.num_attacks):

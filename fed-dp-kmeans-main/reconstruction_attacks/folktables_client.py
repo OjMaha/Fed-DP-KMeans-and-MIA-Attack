@@ -26,7 +26,7 @@ STATE_LIST = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
 
 
 # --- create configs ---
-def create_recon_configs_folktables_client(base_config_path='../configs/folktables.yaml'):
+def create_recon_configs_folktables_client(base_config_path='configs/folktables.yaml'):
     """Creates non-private and private config files for data-point level attack on Folktables."""
     try:
         with open(base_config_path, 'r') as f: base_config = yaml.safe_load(f)
@@ -46,16 +46,19 @@ def create_recon_configs_folktables_client(base_config_path='../configs/folktabl
     base_config.setdefault('overall_target_delta', default_delta); base_config.setdefault('fedlloyds_delta', default_delta)
     base_config.setdefault('fedlloyds_clipping_bound', 2.65); base_config.setdefault('fedlloyds_laplace_clipping_bound', 1)
 
+    os.makedirs("reconstruction_attacks/configs", exist_ok=True)
+
     # Config 1: Non-Private (DP flags off)
     config_non_private = base_config.copy(); config_non_private.update({'datapoint_privacy': False, 'outer_product_privacy': False, 'point_weighting_privacy': False,'center_init_privacy': False, 'fedlloyds_privacy': False,'fedlloyds_num_iterations': 1})
-    config_non_private_fname = 'configs/folktables_datapoint_non_private.yaml'
+    config_non_private_fname = 'reconstruction_attacks/configs/folktables_client_non_private.yaml'
     with open(config_non_private_fname, 'w') as f: yaml.dump(config_non_private, f, sort_keys=False)
 
     # Config 2: Private (Datapoint privacy false, rest True as client level attack)
     config_private = base_config.copy(); config_private.update({'datapoint_privacy': False, 'outer_product_privacy': True, 'point_weighting_privacy': True,'center_init_privacy': True, 'fedlloyds_privacy': True,'fedlloyds_num_iterations': 1})
-    config_private.setdefault('fedlloyds_clipping_bound', 2.65); config_private.setdefault('fedlloyds_laplace_clipping_bound', 1)
+    config_private['fedlloyds_clipping_bound'] =  100000000000
+    config_private['fedlloyds_laplace_clipping_bound'] = 100000000000
     config_private.setdefault('fedlloyds_delta', config_private.get('overall_target_delta', 1e-6))
-    config_private_fname = 'configs/folktables_datapoint_private.yaml'
+    config_private_fname = 'reconstruction_attacks/configs/folktables_client_private.yaml'
     with open(config_private_fname, 'w') as f: yaml.dump(config_private, f, sort_keys=False)
 
     print("Folktables single-point reconstruction attack config files created.")
@@ -73,7 +76,7 @@ def get_target_data(target_client_id_str, all_train_clients):
 
 # run_training_get_centers (Identical)
 def run_training_get_centers(config_file, exclude_client_id_str=None, exclude_datapoint_str=None, seed=None):
-    cmd = ['python', '../run.py', '--args_config', config_file]
+    cmd = ['python', 'run.py', '--args_config', config_file]
     if exclude_client_id_str: cmd.extend(['--exclude_client_id_str', exclude_client_id_str])
     if exclude_datapoint_str: cmd.extend(['--exclude_datapoint', exclude_datapoint_str]) # Keep option
     if seed is not None: cmd.extend(['--seed', str(seed)])
@@ -189,7 +192,7 @@ def run_reconstruction_once_client_mean(config_file, target_client_id_str, targe
 def main():
     parser = argparse.ArgumentParser(description="Client Mean Reconstruction Attack (Folktables - Client Privacy from MIA params)")
     parser.add_argument("--num_attacks", type=int, default=10, help="Number of clients to attack (max 51).")
-    parser.add_argument("--base_config", type=str, default="../configs/folktables.yaml", help="Base config for Folktables DP settings.")
+    parser.add_argument("--base_config", type=str, default="configs/folktables.yaml", help="Base config for Folktables DP settings.")
     parser.add_argument("--seed", type=int, default=None, help="Global random seed.")
     parser.add_argument("--filter_label", type=int, choices=[2, 5, 6], default=5, help="Folktables filter label (from MIA script default).")
     args, unknown = parser.parse_known_args()

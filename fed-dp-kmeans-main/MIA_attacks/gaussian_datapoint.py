@@ -99,7 +99,7 @@ def run_training(config_file, exclude_client_id_str=None, exclude_datapoint=None
     seed: optional int to pass --seed (deterministic runs)
     output_centers: optional output path to pass to run.py if you've added that CLI (not required here)
     """
-    cmd = ['python', '../run.py', '--args_config', config_file]
+    cmd = ['python', 'run.py', '--args_config', config_file]
     if exclude_client_id_str:
         cmd.extend(['--exclude_client_id_str', exclude_client_id_str])
     if exclude_datapoint:
@@ -175,8 +175,8 @@ def main():
         'private': {'success': 0, 'total': 0}
     }
     config_files = {
-        'non_private': 'configs/mia_non_private1.yaml',
-        'private': 'configs/mia_private1.yaml'
+        'non_private': 'configs/gaussian_datapoint_non_private.yaml',
+        'private': 'configs/gaussian_datapoint_private.yaml'
     }
 
     for i in range(args.num_attacks):

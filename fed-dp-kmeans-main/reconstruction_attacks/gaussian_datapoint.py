@@ -28,7 +28,7 @@ from privacy.utils import get_mechanism
 from algorithms import add_algorithms_arguments
 
 # --- create_recon_configs_datapoint
-def create_recon_configs_datapoint(base_config_path='../configs/gaussians_data_privacy.yaml'):
+def create_recon_configs_datapoint(base_config_path='configs/gaussians_data_privacy.yaml'):
     # (ensures DP settings)
     try:
         with open(base_config_path, 'r') as f: base_config = yaml.safe_load(f)
@@ -45,12 +45,15 @@ def create_recon_configs_datapoint(base_config_path='../configs/gaussians_data_p
     base_config.setdefault('overall_target_delta', default_delta); base_config.setdefault('fedlloyds_delta', default_delta)
     base_config.setdefault('fedlloyds_clipping_bound', 11); base_config.setdefault('fedlloyds_laplace_clipping_bound', 1)
     config_non_private = base_config.copy(); config_non_private.update({'datapoint_privacy': True, 'outer_product_privacy': False, 'point_weighting_privacy': False,'center_init_privacy': False, 'fedlloyds_privacy': False,'fedlloyds_num_iterations': 1})
-    config_non_private_fname = 'configs/gaussian_datapoint_non_private.yaml'
+    config_non_private_fname = 'reconstruction_attacks/configs/gaussian_datapoint_non_private.yaml'
+    
+    os.makedirs("reconstruction_attacks/configs", exist_ok=True)
+    
     with open(config_non_private_fname, 'w') as f: yaml.dump(config_non_private, f, sort_keys=False)
     config_private = base_config.copy(); config_private.update({'datapoint_privacy': True, 'outer_product_privacy': True, 'point_weighting_privacy': True,'center_init_privacy': True, 'fedlloyds_privacy': True,'fedlloyds_num_iterations': 1})
     config_private.setdefault('fedlloyds_clipping_bound', 11); config_private.setdefault('fedlloyds_laplace_clipping_bound', 1)
     config_private.setdefault('fedlloyds_delta', config_private.get('overall_target_delta', 1e-6))
-    config_private_fname = 'configs/gaussian_datapoint_private.yaml'
+    config_private_fname = 'reconstruction_attacks/configs/gaussian_datapoint_private.yaml'
     with open(config_private_fname, 'w') as f: yaml.dump(config_private, f, sort_keys=False)
     print("Single-point reconstruction attack config files created.")
     return config_non_private_fname, config_private_fname
@@ -66,7 +69,7 @@ def get_target_data(target_client_id_str, all_train_clients):
 # --- run_training_get_centers (Runs run.py, gets centers) ---
 def run_training_get_centers(config_file, exclude_client_id_str=None, exclude_datapoint_str=None, seed=None):
     # (supports both exclude flags)
-    cmd = ['python', '../run.py', '--args_config', config_file]
+    cmd = ['python', 'run.py', '--args_config', config_file]
     if exclude_client_id_str: cmd.extend(['--exclude_client_id_str', exclude_client_id_str])
     if exclude_datapoint_str: cmd.extend(['--exclude_datapoint', exclude_datapoint_str])
     if seed is not None: cmd.extend(['--seed', str(seed)])
@@ -202,7 +205,7 @@ def run_reconstruction_once_single_point(config_file, target_client_id_str, targ
 def main():
     parser = argparse.ArgumentParser(description="Single Data Point Reconstruction (Gaussian Dataset - DP)")
     parser.add_argument("--num_attacks", type=int, default=50, help="Number of attack iterations (target data points).")
-    parser.add_argument("--base_config", type=str, default="../configs/gaussians_data_privacy.yaml", help="Base config for DP settings.")
+    parser.add_argument("--base_config", type=str, default="configs/gaussians_data_privacy.yaml", help="Base config for DP settings.")
     parser.add_argument("--seed", type=int, default=None, help="Global random seed.")
     args, unknown = parser.parse_known_args()
 
