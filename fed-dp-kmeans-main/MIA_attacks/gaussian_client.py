@@ -17,6 +17,8 @@ from algorithms import add_algorithms_arguments
 
 def create_mia_configs():
     """Creates two config files for the attack."""
+
+    os.makedirs("MIA_attacks/configs", exist_ok=True)
     
     # Config 1: Non-Private
     config_non_private = {
@@ -34,7 +36,7 @@ def create_mia_configs():
         'fedlloyds_privacy': False,  # --- NON-PRIVATE ---
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/gaussian_client_non_private.yaml', 'w') as f:
+    with open('MIA_attacks/configs/gaussian_client_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f)
 
     # Config 2: Private
@@ -65,7 +67,7 @@ def create_mia_configs():
         'minimum_server_point_weight': 5,
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/gaussian_client_private.yaml', 'w') as f:
+    with open('MIA_attacks/configs/gaussian_client_private.yaml', 'w') as f:
         yaml.dump(config_private, f)
     
     print("MIA config files created.")
@@ -137,8 +139,7 @@ def run_attack_once(config_file, target_client_id_str, target_client_data):
 def main():
     parser = argparse.ArgumentParser(description="Membership Inference Attack Simulation")
     parser.add_argument("--num_attacks", type=int, default=50, help="Number of attack iterations.")
-    parser.add_argument("--args_config", type=str, default="../configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
-    # args = parser.parse_args()
+    parser.add_argument("--args_config", type=str, default="configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
     args, _ = parser.parse_known_args()
 
     # --- Setup ---
@@ -175,8 +176,8 @@ def main():
     }
     
     config_files = {
-        'non_private': 'configs/gaussian_client_non_private.yaml',
-        'private': 'configs/gaussian_client_private.yaml'
+        'non_private': 'MIA_attacks/configs/gaussian_client_non_private.yaml',
+        'private': 'MIA_attacks/configs/gaussian_client_private.yaml'
     }
 
     for i in range(args.num_attacks):
@@ -215,8 +216,8 @@ def main():
     print(f"PRIVATE Model Attack Accuracy:     {acc_private:.2f}% ({attack_results['private']['success']} / {attack_results['private']['total']})")
 
     # Clean up
-    os.remove('configs/gaussian_client_non_private.yaml')
-    os.remove('configs/gaussian_client_private.yaml')
+    os.remove('MIA_attacks/configs/gaussian_client_non_private.yaml')
+    os.remove('MIA_attacks/configs/gaussian_client_private.yaml')
     os.remove('final_centers.npy')
 
 if __name__ == "__main__":
