@@ -20,6 +20,9 @@ from algorithms import add_algorithms_arguments
 
 def create_mia_configs():
     """Creates two config files for the attack (same as your original)."""
+
+    os.makedirs("MIA_attacks/configs", exist_ok=True)
+
     # Config 1: Non-Private
     config_non_private = {
         'dataset': 'GaussianMixtureUniform',
@@ -36,7 +39,7 @@ def create_mia_configs():
         'fedlloyds_privacy': False,  # --- NON-PRIVATE ---
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/gaussian_datapoint_non_private.yaml', 'w') as f:
+    with open('MIA_attacks/configs/gaussian_datapoint_non_private.yaml', 'w') as f:
         yaml.dump(config_non_private, f)
 
     # Config 2: Private
@@ -67,7 +70,7 @@ def create_mia_configs():
         'minimum_server_point_weight': 5,
         'fedlloyds_num_iterations': 1
     }
-    with open('configs/gaussian_datapoint_private.yaml', 'w') as f:
+    with open('MIA_attacks/configs/gaussian_datapoint_private.yaml', 'w') as f:
         yaml.dump(config_private, f)
     
     print("MIA config files created.")
@@ -144,7 +147,7 @@ def run_attack_once_datalevel(config_file, target_client_id_str, sample_index, t
 def main():
     parser = argparse.ArgumentParser(description="Data-level Membership Inference Attack (white-box)")
     parser.add_argument("--num_attacks", type=int, default=50, help="Number of attack iterations.")
-    parser.add_argument("--args_config", type=str, default="../configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
+    parser.add_argument("--args_config", type=str, default="configs/gaussians_data_privacy.yaml", help="Base config to get data params.")
     parser.add_argument("--seed", type=int, default=None, help="Optional seed to pass to runs for determinism.")
     args, _ = parser.parse_known_args()
 
@@ -175,8 +178,8 @@ def main():
         'private': {'success': 0, 'total': 0}
     }
     config_files = {
-        'non_private': 'configs/gaussian_datapoint_non_private.yaml',
-        'private': 'configs/gaussian_datapoint_private.yaml'
+        'non_private': 'MIA_attacks/configs/gaussian_datapoint_non_private.yaml',
+        'private': 'MIA_attacks/configs/gaussian_datapoint_private.yaml'
     }
 
     for i in range(args.num_attacks):
@@ -213,8 +216,8 @@ def main():
 
     # Cleanup
     try:
-        os.remove('configs/gaussian_datapoint_non_private.yaml')
-        os.remove('configs/gaussian_datapoint_private.yaml')
+        os.remove('MIA_attacks/configs/gaussian_datapoint_non_private.yaml')
+        os.remove('MIA_attacks/configs/gaussian_datapoint_private.yaml')
     except Exception:
         pass
     try:
