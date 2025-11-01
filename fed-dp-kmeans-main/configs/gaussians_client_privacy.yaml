@@ -13,7 +13,7 @@ weighting_epsilon: 1
 center_init_gaussian_epsilon: 1
 center_init_contributed_components_epsilon: 0.2
 fedlloyds_epsilon: 1
-fedlloyds_epsilon_split: 0.5
+# fedlloyds_epsilon_split: 0.5
 
 outer_product_clipping_bound: 1500
 weighting_clipping_bound: 1

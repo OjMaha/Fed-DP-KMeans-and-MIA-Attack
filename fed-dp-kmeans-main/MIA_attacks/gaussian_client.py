@@ -15,60 +15,85 @@ from pfl.data.federated_dataset import FederatedDataset
 from algorithms import add_algorithms_arguments
 
 
-def create_mia_configs():
-    """Creates two config files for the attack."""
-
-    os.makedirs("MIA_attacks/configs", exist_ok=True)
+def create_mia_configs(base_config_path='configs/gaussians_client_privacy.yaml'):
+    """
+    Creates two config files for the attack, using the provided YAML as a base.
+    """
     
-    # Config 1: Non-Private
-    config_non_private = {
-        'dataset': 'GaussianMixtureUniform',
-        'K': 10,
-        'dim': 100,
-        'num_train_clients': 100,
-        'samples_per_client': 1000,
-        'samples_per_mixture_server': 20,
-        'num_uniform_server': 100,
+    os.makedirs("MIA_attacks/configs", exist_ok=True)
+
+    # --- Load the base config from the specified YAML file ---
+    try:
+        with open(base_config_path, 'r') as f:
+            base_config = yaml.safe_load(f)
+        print(f"Loaded base config from {base_config_path}")
+    except FileNotFoundError:
+        print(f"Warning: Base config file '{base_config_path}' not found. Using hardcoded defaults.")
+        # Fallback to defaults if file not found
+        base_config = {
+            'dataset': 'GaussianMixtureUniform', 'K': 10, 'dim': 100,
+            'num_train_clients': 2000, 'samples_per_client': 50,
+            'samples_per_mixture_server': 20, 'num_uniform_server': 100,
+            'initialization_algorithm': 'FederatedClusterInit',
+            'clustering_algorithm': 'FederatedLloyds',
+            'minimum_server_point_weight': 5, 'fedlloyds_num_iterations': 0,
+            'datapoint_privacy': False, 'outer_product_epsilon': 1, 'weighting_epsilon': 1,
+            'center_init_gaussian_epsilon': 1, 'center_init_contributed_components_epsilon': 0.2,
+            'fedlloyds_epsilon': 1, 'fedlloyds_epsilon_split': 0.5,
+            'outer_product_clipping_bound': 1500, 'weighting_clipping_bound': 1,
+            'center_init_clipping_bound': 21, 'center_init_contributed_components_clipping_bound': 10,
+            'fedlloyds_clipping_bound': 120, 'fedlloyds_laplace_clipping_bound': 50,
+            'send_sums_and_counts': True
+        }
+    except Exception as e:
+        print(f"Error loading base config '{base_config_path}': {e}. Using hardcoded defaults.")
+        # Fallback to same defaults
+        base_config = {
+            'dataset': 'GaussianMixtureUniform', 'K': 10, 'dim': 100,
+            'num_train_clients': 2000, 'samples_per_client': 50,
+            'samples_per_mixture_server': 20, 'num_uniform_server': 100,
+            'initialization_algorithm': 'FederatedClusterInit',
+            'clustering_algorithm': 'FederatedLloyds',
+            'minimum_server_point_weight': 5, 'fedlloyds_num_iterations': 0,
+            'datapoint_privacy': False, 'outer_product_epsilon': 1, 'weighting_epsilon': 1,
+            'center_init_gaussian_epsilon': 1, 'center_init_contributed_components_epsilon': 0.2,
+            'fedlloyds_epsilon': 1, 'fedlloyds_epsilon_split': 0.5,
+            'outer_product_clipping_bound': 1500, 'weighting_clipping_bound': 1,
+            'center_init_clipping_bound': 21, 'center_init_contributed_components_clipping_bound': 10,
+            'fedlloyds_clipping_bound': 120, 'fedlloyds_laplace_clipping_bound': 50,
+            'send_sums_and_counts': True
+        }
+    
+    # Config 1: Non-Private (start with base, apply non-private settings)
+    config_non_private = base_config.copy()
+    config_non_private.update({
         'datapoint_privacy': False,  # --- NON-PRIVATE ---
         'outer_product_privacy': False,
         'point_weighting_privacy': False,
         'center_init_privacy': False,
         'fedlloyds_privacy': False,  # --- NON-PRIVATE ---
-        'fedlloyds_num_iterations': 1
-    }
+        'fedlloyds_num_iterations': 1 # Attack runs 1 iteration for non-private
+    })
+
     with open('MIA_attacks/configs/gaussian_client_non_private.yaml', 'w') as f:
-        yaml.dump(config_non_private, f)
+        yaml.dump(config_non_private, f, sort_keys=False)
 
-    # Config 2: Private
-    config_private = {
-        'dataset': 'GaussianMixtureUniform',
-        'K': 10,
-        'dim': 100,
-        'num_train_clients': 100,
-        'samples_per_client': 1000,
-        'samples_per_mixture_server': 20,
-        'num_uniform_server': 100,
-        'datapoint_privacy': False,  # --- PRIVATE ---
-        'outer_product_epsilon': 0.25,
-        'weighting_epsilon': 0.25,
-        'center_init_gaussian_epsilon': 0.25,
-        'center_init_epsilon_split': 0.5,
-        'fedlloyds_epsilon': 0.25,   # --- Total Epsilon approx 1.0 ---
-
-        'outer_product_clipping_bound': 1500,
-        'weighting_clipping_bound': 1,
-        'center_init_clipping_bound': 21,
-        'center_init_contributed_components_clipping_bound': 10,
-        'fedlloyds_clipping_bound': 120,
-        'fedlloyds_laplace_clipping_bound': 50,
-        
-        'initialization_algorithm': 'FederatedClusterInitExact',
-        'clustering_algorithm': 'FederatedLloyds',
-        'minimum_server_point_weight': 5,
-        'fedlloyds_num_iterations': 1
-    }
+    # Config 2: Private (start with base, apply specific private settings from your code)
+    config_private = base_config.copy()
+    config_private.update({
+        'datapoint_privacy': False,  # --- PRIVATE (Client-level) ---
+        'outer_product_privacy': True,
+        'point_weighting_privacy': True,
+        'center_init_privacy': True,
+        'fedlloyds_privacy': True,
+        # Apply specific overrides from your script
+        'center_init_epsilon_split': 1,
+        'fedlloyds_epsilon': 1,
+        'fedlloyds_num_iterations': 0 # Attack runs 0 iterations for private
+    })
+    
     with open('MIA_attacks/configs/gaussian_client_private.yaml', 'w') as f:
-        yaml.dump(config_private, f)
+        yaml.dump(config_private, f, sort_keys=False)
     
     print("MIA config files created.")
 
@@ -144,7 +169,7 @@ def main():
 
     # --- Setup ---
     print("--- 1. Creating MIA config files ---")
-    create_mia_configs()
+    create_mia_configs() # This will now use configs/gaussians_client_privacy.yaml
     
     print("\n--- 2. Loading client list ---")
     
@@ -179,6 +204,8 @@ def main():
         'non_private': 'MIA_attacks/configs/gaussian_client_non_private.yaml',
         'private': 'MIA_attacks/configs/gaussian_client_private.yaml'
     }
+
+    random.seed(21)
 
     for i in range(args.num_attacks):
         print(f"\n--- ATTACK ITERATION {i+1} / {args.num_attacks} ---")

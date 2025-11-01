@@ -33,14 +33,16 @@ def make_data(args: argparse.Namespace):
         for num_clients in [args.num_train_clients, args.num_val_clients]:
             client_datasets = []
             all_x, all_y = [], []
+
             for i in range(num_clients):
+                
+                n = num_samples_fn()
+                x, y = generate_gaussian_mixture_data(n, mixture_weights, means, covs)
 
                 if str(i) == target_client_to_exclude:
                     print(f"--- MIA ATTACK: Excluding client {i} ---")
-                    continue # Skip this client
-
-                n = num_samples_fn()
-                x, y = generate_gaussian_mixture_data(n, mixture_weights, means, covs)
+                    continue # <-- NOW ONLY SKIPS APPENDING
+                
                 client_datasets.append(Dataset((x, y), user_id=str(i)))
                 all_x.append(x)
                 all_y.append(y)
